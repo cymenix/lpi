@@ -1,0 +1,21 @@
+# https://moonrepo.dev/docs/config/project
+$schema: "https://moonrepo.dev/schemas/project.json"
+id: lpi
+project:
+  name: "lpi"
+  description: "Load project info"
+stack: "systems"
+tags:
+  - "lpi"
+  - "rust"
+  - "cli"
+type: "application"
+tasks:
+  lpi:
+    command: "cargo run --"
+    options:
+      cache: false
+  test:
+    command: "cargo test"
+  build:
+    command: "cargo build"
