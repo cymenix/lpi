@@ -1,4 +1,6 @@
-use crossterm::event::{Event, KeyCode, MouseEventKind};
+use crossterm::event::{
+    Event, KeyCode, KeyEvent, KeyEventKind, MouseEventKind,
+};
 use ratatui::backend::Backend;
 use ratatui::layout::Position;
 use ratatui::style::{Color, Modifier, Style};
@@ -86,14 +88,20 @@ impl App {
         let mut debounce: Option<Instant> = None;
 
         loop {
-            let timeout =
-                debounce.map_or(DEBOUNCE, |start| DEBOUNCE.saturating_sub(start.elapsed()));
+            let timeout = debounce.map_or(DEBOUNCE, |start| {
+                DEBOUNCE.saturating_sub(start.elapsed())
+            });
             if crossterm::event::poll(timeout)? {
-                let event = crossterm::event::read()?;
-                let update = match event {
-                    Event::Key(key) => match key.code {
+                let update = match crossterm::event::read()?{
+                    Event::Key(KeyEvent {
+                        code,
+                        kind: KeyEventKind::Press,
+                        ..
+                    }) => match code {
                         KeyCode::Char('q') => return Ok(None),
-                        KeyCode::Char('\n' | ' ') => self.state.toggle_selected(),
+                        KeyCode::Char('\n' | ' ') => {
+                            self.state.toggle_selected()
+                        }
                         KeyCode::Left => self.state.key_left(),
                         KeyCode::Char('h') => self.state.key_left(),
                         KeyCode::Right => self.state.key_right(),
@@ -111,7 +119,9 @@ impl App {
                             self.state.key_right();
                             let selected = self.state.selected();
                             if !selected.is_empty() {
-                                return Ok(Some(selected.last().unwrap().to_string()));
+                                return Ok(Some(
+                                    selected.last().unwrap().to_string(),
+                                ));
                             }
                             false
                         }
@@ -120,9 +130,9 @@ impl App {
                     Event::Mouse(mouse) => match mouse.kind {
                         MouseEventKind::ScrollDown => self.state.scroll_down(1),
                         MouseEventKind::ScrollUp => self.state.scroll_up(1),
-                        MouseEventKind::Down(_button) => {
-                            self.state.click_at(Position::new(mouse.column, mouse.row))
-                        }
+                        MouseEventKind::Down(_button) => self
+                            .state
+                            .click_at(Position::new(mouse.column, mouse.row)),
                         _ => false,
                     },
                     Event::Resize(_, _) => true,
