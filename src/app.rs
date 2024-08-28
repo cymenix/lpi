@@ -53,7 +53,7 @@ impl From<Task> for TreeItem<'static, &'static str> {
 
 impl App {
     pub fn new() -> Self {
-        Self::from(Moon::generate())
+        Self::from(Moon::generate(Moon::get_tasks()))
     }
 
     pub fn draw(&mut self, frame: &mut Frame) {

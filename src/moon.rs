@@ -13,19 +13,21 @@ impl Moon {
         Self { projects }
     }
 
-    pub(crate) fn generate() -> Self {
+    pub(crate) fn get_tasks() -> String {
         let moon = std::process::Command::new(MOON)
             .current_dir(Path::new(&std::env::var(MOON_REPO).unwrap()))
             .args(["query", "tasks"])
             .output()
             .expect("Failed to execute `moon query tasks`");
 
-        let stdout = String::from_utf8(moon.stdout).expect("Failed to convert stdout to string");
+        String::from_utf8(moon.stdout).expect("Failed to convert stdout to string")
+    }
 
+    pub(crate) fn generate(tasks: String) -> Self {
         let mut projects: Vec<Project> = Vec::new();
         let mut project: Option<Box<Project>> = None;
 
-        for line in stdout.lines() {
+        for line in tasks.lines() {
             if line.trim().is_empty() {
                 continue;
             }
@@ -34,17 +36,27 @@ impl Moon {
                 match project {
                     Some(ref mut p) => {
                         projects.push(*p.clone());
-                        *p = Box::new(Project::new(line.trim().to_string(), vec![]));
+                        *p = Box::new(Project::new(
+                            line.trim().to_string(),
+                            vec![],
+                        ));
                     }
                     _ => {
-                        project = Some(Box::new(Project::new(line.trim().to_string(), vec![])));
+                        project = Some(Box::new(Project::new(
+                            line.trim().to_string(),
+                            vec![],
+                        )));
                     }
                 }
             } else if let Some(ref mut p) = project {
-                p.tasks
-                    .push(Task::new(p.project.clone(), line.trim().to_string()));
+                p.tasks.push(Task::new(
+                    p.project.clone(),
+                    line.trim().to_string(),
+                ));
             }
         }
+
+        projects.push(*project.unwrap());
 
         Self::new(projects)
     }
@@ -73,5 +85,35 @@ impl Task {
         let task_name = task.split_once('|').unwrap().0.trim();
         let command = format!("{project}{task_name}");
         Self { task, command }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_moon_generate() {
+        let tasks = r#"
+kickbase
+	:build | make
+	:dist-clean | make
+	:doc | make
+	:edit | nvim
+	:fmt | make
+	:help | make
+	:install | make
+	:lint | make
+	:lpi | lpi
+	:release | make
+	:run | make
+	:run-release | make
+	:shell | nom
+	:test | make
+	:test-all | make
+	:uninstall | make
+"#;
+        let moon = Moon::generate(String::from(tasks));
+        println!("{moon:#?}");
     }
 }
