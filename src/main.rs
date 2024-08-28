@@ -2,18 +2,20 @@ mod app;
 mod moon;
 
 use app::App;
-use moon::{MOON_REPO, MOON};
+use moon::{MOON, MOON_REPO};
 use ratatui::{backend::CrosstermBackend, Terminal};
-use std::{os::unix::process::CommandExt, path::Path};
+use std::{path::Path, process::Command};
 
 fn main() -> std::io::Result<()> {
     crossterm::terminal::enable_raw_mode()?;
     let mut stdout = std::io::stdout();
+
     crossterm::execute!(
         stdout,
         crossterm::terminal::EnterAlternateScreen,
         crossterm::event::EnableMouseCapture
     )?;
+
     let mut terminal = Terminal::new(CrosstermBackend::new(stdout))?;
 
     let mut app = App::new();
@@ -32,10 +34,16 @@ fn main() -> std::io::Result<()> {
     }
 
     if let Ok(Some(command)) = res {
-        std::process::Command::new(MOON)
+        let mut child = Command::new(MOON)
             .current_dir(Path::new(&std::env::var(MOON_REPO).unwrap()))
             .args(["run", &command])
-            .exec();
+            .spawn()?;
+
+        let status = child.wait()?;
+
+        if !status.success() {
+            eprintln!("Command executed with a non-zero status");
+        }
     }
 
     Ok(())
