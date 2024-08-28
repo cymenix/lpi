@@ -89,7 +89,8 @@ impl App {
             let timeout =
                 debounce.map_or(DEBOUNCE, |start| DEBOUNCE.saturating_sub(start.elapsed()));
             if crossterm::event::poll(timeout)? {
-                let update = match crossterm::event::read()? {
+                let event = crossterm::event::read()?;
+                let update = match event {
                     Event::Key(key) => match key.code {
                         KeyCode::Char('q') => return Ok(None),
                         KeyCode::Char('\n' | ' ') => self.state.toggle_selected(),
@@ -109,7 +110,10 @@ impl App {
                         KeyCode::Enter => {
                             self.state.key_right();
                             let selected = self.state.selected();
-                            return Ok(Some(selected.last().unwrap().to_string()));
+                            if !selected.is_empty() {
+                                return Ok(Some(selected.last().unwrap().to_string()));
+                            }
+                            false
                         }
                         _ => false,
                     },
