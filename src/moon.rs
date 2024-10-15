@@ -20,7 +20,8 @@ impl Moon {
             .output()
             .expect("Failed to execute `moon query tasks`");
 
-        String::from_utf8(moon.stdout).expect("Failed to convert stdout to string")
+        String::from_utf8(moon.stdout)
+            .expect("Failed to convert stdout to string")
     }
 
     pub(crate) fn generate(tasks: String) -> Self {
@@ -83,7 +84,7 @@ pub(crate) struct Task {
 impl Task {
     pub(crate) fn new(project: String, task: String) -> Self {
         let task_name = task.split_once('|').unwrap().0.trim();
-        let command = format!("{project}{task_name}");
+        let command = format!("{project}:{task_name}");
         Self { task, command }
     }
 }
@@ -96,22 +97,22 @@ mod tests {
     fn test_moon_generate() {
         let tasks = r#"
 kickbase
-	:build | make
-	:dist-clean | make
-	:doc | make
-	:edit | nvim
-	:fmt | make
-	:help | make
-	:install | make
-	:lint | make
-	:lpi | lpi
-	:release | make
-	:run | make
-	:run-release | make
-	:shell | nom
-	:test | make
-	:test-all | make
-	:uninstall | make
+	build | make
+	dist-clean | make
+	doc | make
+	edit | nvim
+	fmt | make
+	help | make
+	install | make
+	lint | make
+	lpi | lpi
+	release | make
+	run | make
+	run-release | make
+	shell | nom
+	test | make
+	test-all | make
+	uninstall | make
 "#;
         let moon = Moon::generate(String::from(tasks));
         println!("{moon:#?}");

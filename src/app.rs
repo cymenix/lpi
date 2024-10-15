@@ -57,7 +57,7 @@ impl App {
     }
 
     pub fn draw(&mut self, frame: &mut Frame) {
-        let area = frame.size();
+        let area = frame.area();
         let widget = Tree::new(&self.items)
             .expect("all item identifiers are unique")
             .block(Block::bordered().title("Workspace projects"))
@@ -92,7 +92,7 @@ impl App {
                 DEBOUNCE.saturating_sub(start.elapsed())
             });
             if crossterm::event::poll(timeout)? {
-                let update = match crossterm::event::read()?{
+                let update = match crossterm::event::read()? {
                     Event::Key(KeyEvent {
                         code,
                         kind: KeyEventKind::Press,
@@ -159,7 +159,7 @@ mod tests {
 
     #[test]
     fn should_create_tree_item_from_task() {
-        let task = Task::new("p".to_string(), ":check | biome".to_string());
+        let task = Task::new("p".to_string(), "check | biome".to_string());
         let tree_item = TreeItem::from(task);
         dbg!(&tree_item);
         assert_eq!(tree_item.identifier().to_string().as_str(), "p:check")
@@ -167,7 +167,7 @@ mod tests {
 
     #[test]
     fn should_create_task() {
-        let task = Task::new("p".to_string(), ":check | biome".to_string());
+        let task = Task::new("p".to_string(), "check | biome".to_string());
         assert_eq!(task.command, "p:check")
     }
 }
